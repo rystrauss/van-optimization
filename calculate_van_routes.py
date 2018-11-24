@@ -48,6 +48,8 @@ def read_input(input):
               help='The starting/ending point for the trips. Given as an address; use underscores where spaces would '
                    'normally be used (i.e. "111_ABC_Street,_Davidson,_NC_28036"). Defaults to the Ada Jenkins Center.')
 def main(input, output, capacity, extra_trips, origin):
+    """Finds the optimal van routes for dropping off students from the Ada Jenkins center."""
+    
     # Process the input
     locations = read_input(input)
     input.close()
