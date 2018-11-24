@@ -57,39 +57,37 @@ def main(input, output, capacity, extra_trips, origin):
     origin = origin.replace('_', '')
     origin = convert_place(origin)
 
-    waypoints = locations['M']
+    for day, waypoints in locations.items():
+        # The weights to be used during clustering; corresponds to the number of people at each stop
+        weights = [x[4] for x in waypoints]
 
-    # The weights to be used during clustering; corresponds to the number of people at each stop
-    weights = [x[4] for x in waypoints]
+        # Get the total number of passengers that need to be taken home
+        total_passengers = sum(weights)
 
-    # Get the total number of passengers that need to be taken home
-    total_passengers = sum(weights)
+        # The minimum number of trips needed
+        min_trips = math.ceil(total_passengers / capacity)
 
-    # The minimum number of trips needed
-    min_trips = math.ceil(total_passengers // capacity)
+        # Get lat/long data for clustering
+        clustering_data = np.array([x[1:3] for x in waypoints])
 
-    # Get lat/long data for clustering
-    clustering_data = np.array([x[1:3] for x in waypoints])
+        # Cluster the locations
+        cluster_assignments = None
+        attempts = 0
+        while not cluster_assignments and attempts <= extra_trips:
+            cluster_assignments = cluster(clustering_data,
+                                          k=min_trips + attempts,
+                                          max_weight=capacity,
+                                          weights=np.array(weights),
+                                          max_iter=100)
+            attempts += 1
 
-    # Cluster the locations
-    cluster_assignments = None
-    attempts = 0
-    while not cluster_assignments and attempts <= extra_trips:
-        cluster_assignments = cluster(clustering_data,
-                                      k=min_trips + attempts,
-                                      min_weight=0,
-                                      max_weight=capacity,
-                                      weights=np.array(weights),
-                                      max_iter=100)
-        attempts += 1
+        # Based on the clustering, group waypoints into their individual trips
+        trips = [[] for _ in range(max(cluster_assignments) + 1)]
+        for i, place in enumerate(waypoints):
+            trips[cluster_assignments[i]].append(place[0])
 
-    # Based on the clustering, group waypoints into their individual trips
-    trips = [[] for _ in range(max(cluster_assignments) + 1)]
-    for i, place in enumerate(waypoints):
-        trips[cluster_assignments[i]].append(place[0])
-
-    # Send data to the Directions API to solve the route optimization and get back the results
-    routes = [get_route(origin[0], origin[0], trip) for trip in trips]
+        # Send data to the Directions API to solve the route optimization and get back the results
+        routes = [get_route(origin[0], origin[0], trip) for trip in trips]
 
 
 if __name__ == '__main__':
