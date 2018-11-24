@@ -8,6 +8,7 @@ requests = "*"
 pulp = "*"
 scipy = "*"
 numpy = "*"
+click = "*"
 
 [dev-packages]
 
