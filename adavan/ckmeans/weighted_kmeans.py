@@ -9,11 +9,11 @@ import numpy as np
 import pulp
 
 
-def l2_distance(point1, point2):
+def _l2_distance(point1, point2):
     return sum([(float(i) - float(j)) ** 2 for (i, j) in zip(point1, point2)])
 
 
-class SubProblem(object):
+class _SubProblem(object):
     def __init__(self, centroids, data, weights, min_weight, max_weight):
 
         self.centroids = centroids
@@ -29,7 +29,7 @@ class SubProblem(object):
 
     def _create_model(self):
         def distances(assignment):
-            return l2_distance(self.data[assignment[0]], self.centroids[assignment[1]])
+            return _l2_distance(self.data[assignment[0]], self.centroids[assignment[1]])
 
         assignments = [(i, j) for i in range(self.n) for j in range(self.k)]
 
@@ -75,7 +75,7 @@ class SubProblem(object):
         return clusters
 
 
-def compute_centers(clusters, dataset, weights=None):
+def _compute_centers(clusters, dataset, weights=None):
     """
     weighted average of datapoints to determine centroids
     """
@@ -103,13 +103,13 @@ def compute_centers(clusters, dataset, weights=None):
     return clusters, cluster_centers
 
 
-def initialize_centers(dataset, k):
+def _initialize_centers(dataset, k):
     ids = list(range(len(dataset)))
     random.shuffle(ids)
     return [dataset[id] for id in ids[:k]]
 
 
-def minsize_kmeans_weighted(data, k=3, weights=None, min_weight=0, max_weight=None, max_iter=1000):
+def _minsize_kmeans_weighted(data, k=3, weights=None, min_weight=0, max_weight=None, max_iter=1000):
     assert isinstance(data, np.ndarray), 'data must be a numpy array'
 
     n = data.shape[0]
@@ -118,15 +118,15 @@ def minsize_kmeans_weighted(data, k=3, weights=None, min_weight=0, max_weight=No
     if max_weight is None:
         max_weight = sum(weights)
 
-    centers = initialize_centers(data, k)
+    centers = _initialize_centers(data, k)
     clusters = np.full((n,), fill_value=-1)
 
     for step in range(max_iter):
-        m = SubProblem(centers, data, weights, min_weight, max_weight)
+        m = _SubProblem(centers, data, weights, min_weight, max_weight)
         clusters_ = m.solve()
         if not clusters_:
             return None, None
-        clusters_, centers = compute_centers(clusters_, data)
+        clusters_, centers = _compute_centers(clusters_, data)
 
         converged = all([clusters[i] == clusters_[i] for i in range(n)])
         clusters = clusters_
@@ -136,25 +136,25 @@ def minsize_kmeans_weighted(data, k=3, weights=None, min_weight=0, max_weight=No
     return clusters, centers
 
 
-def cluster_quality(cluster):
+def _cluster_quality(cluster):
     if len(cluster) == 0:
         return 0.0
 
     quality = 0.0
     for i in range(len(cluster)):
         for j in range(i, len(cluster)):
-            quality += l2_distance(cluster[i], cluster[j])
+            quality += _l2_distance(cluster[i], cluster[j])
     return quality / len(cluster)
 
 
-def compute_quality(data, cluster_indices):
+def _compute_quality(data, cluster_indices):
     clusters = dict()
     for i, c in enumerate(cluster_indices):
         if c in clusters:
             clusters[c].append(data[i])
         else:
             clusters[c] = [data[i]]
-    return sum(cluster_quality(c) for c in clusters.values())
+    return sum(_cluster_quality(c) for c in clusters.values())
 
 
 def cluster(data, k=3, min_weight=0, max_weight=None, weights=None, max_iter=1000):
@@ -163,10 +163,10 @@ def cluster(data, k=3, min_weight=0, max_weight=None, weights=None, max_iter=100
     best = None
     best_clusters = None
     for i in range(max_iter):
-        clusters, centers = minsize_kmeans_weighted(data, k=k, min_weight=min_weight, max_weight=max_weight,
-                                                    weights=weights)
+        clusters, centers = _minsize_kmeans_weighted(data, k=k, min_weight=min_weight, max_weight=max_weight,
+                                                     weights=weights)
         if clusters:
-            quality = compute_quality(data, clusters)
+            quality = _compute_quality(data, clusters)
             if not best or (quality < best):
                 best = quality
                 best_clusters = clusters
