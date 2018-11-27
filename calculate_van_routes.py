@@ -22,17 +22,24 @@ def read_input(input):
         are lists of location tuples.
     """
     data = list(filter(None, input.read().splitlines()))
-
+    count = 0
+    matrix_mapping = {}
     locations = {}
+    place_ids = []
     for i in range(0, len(data), 4):
         address, people, days, prioritize = data[i: i + 4]
         place_id, lat, long = convert_place(address)
+        if place_id not in place_ids:
+            place_ids.append(place_id)
+        if place_id not in matrix_mapping:
+            matrix_mapping[(lat, long)] = count
+            count += 1
         for day in days.split():
             if day not in locations:
                 locations[day] = []
             locations[day].append((place_id, lat, long, address, int(people), bool(int(prioritize))))
 
-    return locations
+    return locations, matrix_mapping, place_ids
 
 
 @click.command()
@@ -49,15 +56,17 @@ def read_input(input):
                    'normally be used (i.e. "111_ABC_Street,_Davidson,_NC_28036"). Defaults to the Ada Jenkins Center.')
 def main(input, output, capacity, extra_trips, origin):
     """Finds the optimal van routes for dropping off students from the Ada Jenkins center."""
-    
+
     # Process the input
-    locations = read_input(input)
+    locations, matrix_mapping, place_ids = read_input(input)
     input.close()
     del input
 
     # Process the origin
     origin = origin.replace('_', '')
     origin = convert_place(origin)
+
+    # distance_matrix = get_distance_matrix(place_ids)
 
     for day, waypoints in locations.items():
         # The weights to be used during clustering; corresponds to the number of people at each stop
@@ -77,6 +86,8 @@ def main(input, output, capacity, extra_trips, origin):
         attempts = 0
         while not cluster_assignments and attempts <= extra_trips:
             cluster_assignments = cluster(clustering_data,
+                                          None,
+                                          None,
                                           k=min_trips + attempts,
                                           max_weight=capacity,
                                           weights=np.array(weights),
@@ -90,7 +101,7 @@ def main(input, output, capacity, extra_trips, origin):
 
         # Send data to the Directions API to solve the route optimization and get back the results
         routes = [get_route(origin[0], origin[0], trip) for trip in trips]
-
+        
 
 if __name__ == '__main__':
     main()

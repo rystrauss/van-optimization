@@ -41,3 +41,24 @@ def convert_place(place):
         return converted_places
     else:
         raise ValueError('Positional argument \'place\' must either be a string or list of strings.')
+
+
+def get_distance_matrix(places):
+    places = ['place_id:' + x for x in places]
+    params = {
+        'key': os.environ['KEY'],
+        'origins': '|'.join(places),
+        'destinations': '|'.join(places)
+    }
+    response = requests.get('https://maps.googleapis.com/maps/api/distancematrix/json?', params=params).json()
+
+    assert response['status'] == 'OK', 'The Distance Matrix API could not fetch the data.'
+
+    n = len(places)
+    distance_matrix = [[0] * n for _ in range(n)]
+
+    for i, row in enumerate(response['rows']):
+        for j, item in enumerate(row['elements']):
+            distance_matrix[i][j] = item['duration']['value']
+
+    return distance_matrix
