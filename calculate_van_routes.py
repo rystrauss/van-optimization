@@ -66,8 +66,6 @@ def main(input, output, capacity, extra_trips, origin):
     origin = origin.replace('_', '')
     origin = convert_place(origin)
 
-    # distance_matrix = get_distance_matrix(place_ids)
-
     for day, waypoints in locations.items():
         # The weights to be used during clustering; corresponds to the number of people at each stop
         weights = [x[4] for x in waypoints]
@@ -86,8 +84,6 @@ def main(input, output, capacity, extra_trips, origin):
         attempts = 0
         while not cluster_assignments and attempts <= extra_trips:
             cluster_assignments = cluster(clustering_data,
-                                          None,
-                                          None,
                                           k=min_trips + attempts,
                                           max_weight=capacity,
                                           weights=np.array(weights),
@@ -101,7 +97,7 @@ def main(input, output, capacity, extra_trips, origin):
 
         # Send data to the Directions API to solve the route optimization and get back the results
         routes = [get_route(origin[0], origin[0], trip) for trip in trips]
-        
+
 
 if __name__ == '__main__':
     main()

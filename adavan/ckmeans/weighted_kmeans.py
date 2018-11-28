@@ -9,20 +9,7 @@ import numpy as np
 import pulp
 
 
-DISTANCE_MATRIX = None
-MATRIX_MAPPING = None
-
-
-def cluster(data, distance_matrix, matrix_mapping, k=3, min_weight=0, max_weight=None, weights=None, max_iter=1000):
-    global MATRIX_MAPPING
-    global DISTANCE_MATRIX
-
-    if MATRIX_MAPPING is None:
-        MATRIX_MAPPING = matrix_mapping
-
-    if DISTANCE_MATRIX is None:
-        DISTANCE_MATRIX = distance_matrix
-
+def cluster(data, k=3, min_weight=0, max_weight=None, weights=None, max_iter=1000):
     if weights is None:
         weights = np.ones((data.shape[0],), dtype=np.uint8)
     best = None
@@ -41,10 +28,6 @@ def cluster(data, distance_matrix, matrix_mapping, k=3, min_weight=0, max_weight
 
 def _l2_distance(point1, point2):
     return sum([(float(i) - float(j)) ** 2 for (i, j) in zip(point1, point2)])
-
-
-def _driving_distance(point1, point2):
-    return DISTANCE_MATRIX[MATRIX_MAPPING[point1]][MATRIX_MAPPING[point2]]
 
 
 class _SubProblem(object):
