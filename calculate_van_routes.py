@@ -93,7 +93,12 @@ def main(input, output, capacity, extra_trips, origin):
         # Based on the clustering, group waypoints into their individual trips
         trips = [[] for _ in range(max(cluster_assignments) + 1)]
         for i, place in enumerate(waypoints):
-            trips[cluster_assignments[i]].append(place[0])
+            trips[cluster_assignments[i]].append(place)
+
+        # Order the routes by priority
+        trips.sort(key=lambda x: len(list(filter(lambda j: j[5], x))), reverse=True)
+        for i in range(len(trips)):
+            trips[i] = [x[0] for x in trips[i]]
 
         # Send data to the Directions API to solve the route optimization and get back the results
         routes = [get_route(origin[0], origin[0], trip) for trip in trips]
