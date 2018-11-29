@@ -1,4 +1,5 @@
 import math
+import os
 
 import click
 import numpy as np
@@ -47,6 +48,8 @@ def read_input(input):
 @click.argument('output', type=click.File('w', lazy=True), nargs=1)
 @click.option('--capacity', type=click.INT, default=13,
               help='The maximum number of students that can fit in the van. Defaults to 13.')
+@click.option('--min_passengers', type=click.INT, default=0,
+              help='The minimum number of passenges in a trip. Defaults to 0.')
 @click.option('--extra_trips', type=click.INT, default=1,
               help='The maximum number of extra trips to be allowed. If a clustering cannot be found with the minimum '
                    'number of trips possible, the program will attempt to find a clustering using an additional '
@@ -54,8 +57,13 @@ def read_input(input):
 @click.option('--origin', type=click.STRING, default=ADA_JENKINS,
               help='The starting/ending point for the trips. Given as an address; use underscores where spaces would '
                    'normally be used (i.e. "111_ABC_Street,_Davidson,_NC_28036"). Defaults to the Ada Jenkins Center.')
-def main(input, output, capacity, extra_trips, origin):
+@click.option('--key', type=click.STRING, default=None,
+              help='Optionally provide an API key. If not provided, the program will default to the '
+                   'environment variable "KEY".')
+def main(input, output, capacity, min_passengers, extra_trips, origin, key):
     """Finds the optimal van routes for dropping off students from the Ada Jenkins center."""
+    if key:
+        os.environ['KEY'] = key
 
     # Process the input
     locations, matrix_mapping, place_ids = read_input(input)
@@ -88,9 +96,14 @@ def main(input, output, capacity, extra_trips, origin):
             cluster_assignments = cluster(clustering_data,
                                           k=min_trips + attempts,
                                           max_weight=capacity,
+                                          min_weight=min_passengers,
                                           weights=np.array(weights),
                                           max_iter=100)
             attempts += 1
+
+        if cluster_assignments is None:
+            print('No clustering could be found. Please double check the input.')
+            return
 
         # Based on the clustering, group waypoints into their individual trips
         trips = [[] for _ in range(max(cluster_assignments) + 1)]

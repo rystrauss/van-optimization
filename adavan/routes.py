@@ -31,6 +31,8 @@ def get_route(origin, destination, waypoints, departure_time='now'):
 
     response = requests.get('https://maps.googleapis.com/maps/api/directions/json?', params=params).json()
 
+    assert response['status'] == 'OK', 'Directions API call failed.'
+
     return response
 
 

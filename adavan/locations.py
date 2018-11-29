@@ -18,8 +18,9 @@ def convert_place(place):
             'address': place
         }
         response = requests.get('https://maps.googleapis.com/maps/api/geocode/json?', params=params).json()
-        if response['status'] != 'OK':
-            return None
+
+        assert response['status'] == 'OK', 'Geocoding API call failed.'
+
         place_id = response['results'][0]['place_id']
         latitude = response['results'][0]['geometry']['location']['lat']
         longitude = response['results'][0]['geometry']['location']['lng']
@@ -32,8 +33,9 @@ def convert_place(place):
                 'address': point
             }
             response = requests.get('https://maps.googleapis.com/maps/api/geocode/json?', params=params).json()
-            if response['status'] != 'OK':
-                return None
+
+            assert response['status'] == 'OK', 'Geocoding API call failed.'
+
             place_id = response['results'][0]['place_id']
             latitude = response['results'][0]['geometry']['location']['lat']
             longitude = response['results'][0]['geometry']['location']['lng']
