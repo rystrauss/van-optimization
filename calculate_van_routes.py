@@ -5,7 +5,7 @@ import numpy as np
 
 from adavan.ckmeans.weighted_kmeans import cluster
 from adavan.locations import convert_place
-from adavan.routes import get_route
+from adavan.routes import get_route, parse_routes
 
 ADA_JENKINS = '212_Gamble_St,_Davidson,_NC_28036'
 
@@ -66,6 +66,8 @@ def main(input, output, capacity, extra_trips, origin):
     origin = origin.replace('_', '')
     origin = convert_place(origin)
 
+    all_routes = []
+
     for day, waypoints in locations.items():
         # The weights to be used during clustering; corresponds to the number of people at each stop
         weights = [x[4] for x in waypoints]
@@ -102,6 +104,9 @@ def main(input, output, capacity, extra_trips, origin):
 
         # Send data to the Directions API to solve the route optimization and get back the results
         routes = [get_route(origin[0], origin[0], trip) for trip in trips]
+        all_routes.append(routes)
+
+    parse_routes(all_routes, output)
 
 
 if __name__ == '__main__':
