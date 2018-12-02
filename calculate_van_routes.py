@@ -49,7 +49,7 @@ def read_input(input):
 @click.option('--capacity', type=click.INT, default=13,
               help='The maximum number of students that can fit in the van. Defaults to 13.')
 @click.option('--min_passengers', type=click.INT, default=0,
-              help='The minimum number of passenges in a trip. Defaults to 0.')
+              help='The minimum number of passengers in a trip. Defaults to 0.')
 @click.option('--extra_trips', type=click.INT, default=1,
               help='The maximum number of extra trips to be allowed. If a clustering cannot be found with the minimum '
                    'number of trips possible, the program will attempt to find a clustering using an additional '
